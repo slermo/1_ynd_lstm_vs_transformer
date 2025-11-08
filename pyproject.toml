@@ -2,7 +2,7 @@
 name = "text-gen-comparison"
 version = "0.1.0"
 description = "Сравнение LSTM и Transformer"
-authors = ["slermo <you@example.com>"]
+authors = ["slermo <ledumblasphemus@gmail.com>"]
 readme = "README.md"
 packages = [{ include = "src" }]
 
