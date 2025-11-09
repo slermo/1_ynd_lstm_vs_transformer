@@ -9,13 +9,13 @@ class LstmModel(nn.Module):
         self.embedding = nn.Embedding(vocab_size, hidden_dim)
         self.rnn = nn.LSTM(hidden_dim, hidden_dim, num_layers=num_layers, batch_first=True, dropout = dropout)
         self.fc = nn.Linear(hidden_dim, vocab_size)
-    #     self._init_weights()
+        self._init_weights()
     
-    # def _init_weights(self):
-    #     nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
-    #     self.embedding.weight.data[0] = 0
-    #     nn.init.xavier_uniform_(self.fc.weight)
-    #     nn.init.zeros_(self.fc.bias)
+    def _init_weights(self):
+        nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
+        self.embedding.weight.data[0] = 0
+        nn.init.xavier_uniform_(self.fc.weight)
+        nn.init.zeros_(self.fc.bias)
 
     def forward(self, x):
         emb = self.embedding(x)
