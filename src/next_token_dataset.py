@@ -7,10 +7,10 @@ class NextTokenDataset(Dataset):
         self.inputs = []
         self.labels = []
         for line in texts:
-            encodings = tokenizer(line, padding='max_length', truncation=True, max_length=max_len, return_tensors='pt')
+            encodings = tokenizer(line, padding='max_length', truncation=True, max_length=max_len)
             
-            token_ids = encodings["input_ids"].squeeze(0)
-            attention_mask = encodings["attention_mask"].squeeze(0)
+            token_ids = torch.tensor(encodings["input_ids"])
+            attention_mask = torch.tensor(encodings["attention_mask"])
 
             input_ids = token_ids[:-1]
             label_ids = token_ids[1:]
