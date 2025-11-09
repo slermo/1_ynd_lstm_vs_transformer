@@ -69,8 +69,6 @@ class DataUtils:
         pd.DataFrame({"text": val}).to_csv(f"{csv_path}/val.csv", index=False)
         pd.DataFrame({"text": test}).to_csv(f"{csv_path}/test.csv", index=False)
 
-        return
-
 
 
 
