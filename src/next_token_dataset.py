@@ -3,7 +3,6 @@ from torch.utils.data import Dataset
 
 class NextTokenDataset(Dataset):
     def __init__(self, texts, tokenizer, max_len=128):
-        
         self.inputs = []
         self.labels = []
         for line in texts:

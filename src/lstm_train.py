@@ -1,6 +1,6 @@
 
 from src.utils import my_device
-
+import torch
 
 def lstm_train(model, vocab_size, loader, optimizer,criterion):
 
@@ -13,6 +13,11 @@ def lstm_train(model, vocab_size, loader, optimizer,criterion):
 
             optimizer.zero_grad()
             logits = model(input_ids)  # (batch, seq_len, vocab_size)
+            
+            # Сдвигаем таргеты, чтобы предугадывать следующий токен
+            logits = logits[:, :-1, :].contiguous()
+            target_ids = target_ids[:, 1:].contiguous()
+
             # Приводим к 1D
             loss = criterion(
                 logits.view(-1, vocab_size),
@@ -20,8 +25,8 @@ def lstm_train(model, vocab_size, loader, optimizer,criterion):
             )
 
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
-
             total_loss += loss.item()
 
         avg_loss = total_loss / len(loader)

@@ -23,18 +23,53 @@ class LstmModel(nn.Module):
         logits = self.fc(out)
         return logits
     
-    # Генерация последовательности токенов
-    @torch.no_grad()
-    def generate(self, x, max_new_tokens=20):
-        self.eval()
-        x = x.to(my_device())
-        hidden = None
 
-        for _ in range(max_new_tokens):
+    def generate(self, x, max_new_tokens=20, tokenizer=None):
+        with torch.no_grad():
+            self.eval()
+            x = x.to(my_device())
+            
             emb = self.embedding(x)
-            out, hidden = self.rnn(emb, hidden)
-            logits = self.fc(out[:, -1, :]) # берём последний токен
-            probs = torch.nn.functional.softmax(logits, dim=-1)
-            next_token = torch.argmax(probs, dim=-1).unsqueeze(1)
-            x = torch.cat([x, next_token], dim=1)
-        return x
+            out, hidden = self.rnn(emb)
+            
+            for i in range(max_new_tokens):
+                logits = self.fc(out[:, -1, :])
+                probs = torch.nn.functional.softmax(logits, dim=-1)
+                next_token = torch.argmax(probs, dim=-1, keepdim=True)
+                
+                # ОТЛАДКА
+                if tokenizer:
+                    token_id = next_token[0, 0].item()
+                    token_text = tokenizer.decode([token_id])
+                    print(f"{i+1}. ID:{token_id} -> '{token_text}'")
+                # КОНЕЦ ОТЛАДКИ
+                
+                x = torch.cat([x, next_token], dim=1)
+                emb = self.embedding(next_token)
+                out, hidden = self.rnn(emb, hidden)
+            
+            return x
+        
+        # def generate(self, x, max_new_tokens=20):
+        # with torch.no_grad():
+        #     self.eval()
+        #     x = x.to(my_device())
+        
+        #     # Шаг 1: Обработать начальную последовательность один раз
+        #     emb = self.embedding(x)
+        #     out, hidden = self.rnn(emb)  # получаем initial hidden state
+        #     # Шаг 2: Генерировать токены один за другим
+        #     for _ in range(max_new_tokens):
+        #         # Берём логиты последнего токена
+        #         logits = self.fc(out[:, -1, :])  # (batch, vocab_size)
+        #         probs = torch.nn.functional.softmax(logits, dim=-1)
+        #         next_token = torch.argmax(probs, dim=-1, keepdim=True)  # (batch, 1)
+                
+        #         # Добавляем к последовательности
+        #         x = torch.cat([x, next_token], dim=1)
+    
+        #         # Обрабатываем только новый токен
+        #         emb = self.embedding(next_token)  # (batch, 1, hidden_dim)
+        #         out, hidden = self.rnn(emb, hidden)  # используем предыдущий hidden
+        
+        #     return x
