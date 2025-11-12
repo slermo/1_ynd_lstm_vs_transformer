@@ -3,6 +3,7 @@ from src.lstm_train import lstm_train
 import torch
 from prettytable import PrettyTable
 from src.utils import my_device
+import matplotlib.pyplot as plt
 
 def eval_lstm_pipeline(config, model, tokenizer, train_loader, val_loader):
     num_epochs = config['train']['epoches']
@@ -14,16 +15,24 @@ def eval_lstm_pipeline(config, model, tokenizer, train_loader, val_loader):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
     best_val_loss = float('inf')
 
+    train_losses = []
+    val_losses = []
+
     for epoch in range(num_epochs):
         train_avg_loss = lstm_train(model, tokenizer.vocab_size, train_loader, optimizer, criterion)
-        generate_seq(model, tokenizer)
-        val_loss, val_acc, rog = evaluate_lstm(model, loader=val_loader, criterion = criterion, tokenizer=tokenizer)
+        val_loss, val_acc, rog = evaluate_lstm(model, loader=val_loader, criterion = criterion, tokenizer = tokenizer)
         print_epoch_row(epoch + 1, num_epochs, train_avg_loss, val_loss, val_acc, rog)
+        generate_seq(model, tokenizer)
+        print('-' * 100)
+        
+        train_losses.append(train_avg_loss)
+        val_losses.append(val_loss)
 
         if epoch == 0 or val_loss < best_val_loss:
             best_val_loss = val_loss
             torch.save(model.state_dict(), "models/weights_lstm.pt")
-
+    
+    plot_loss_curve(train_losses, val_losses)
 
 def print_epoch_row(epoch, num_epochs, train_loss, val_loss, val_acc, rouge_scores):
     print(f"| {epoch:>2}/{num_epochs:<2} | "
@@ -37,7 +46,18 @@ def print_epoch_row(epoch, num_epochs, train_loss, val_loss, val_acc, rouge_scor
 def generate_seq(model, tokenizer):
     prompt = "The meaning of life"
     input_ids = tokenizer.encode(prompt, return_tensors="pt").to(my_device())
-    output_ids = model.generate(input_ids, max_new_tokens=30, tokenizer= tokenizer)
+    output_ids = model.generate(input_ids, max_new_tokens=10)
     generated_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
-    print(generated_text)
+    print('Generated example: ' + generated_text)
+
+def plot_loss_curve(train_losses, val_losses):
+    plt.figure(figsize=(8, 5))
+    plt.plot(train_losses, label='Train Loss')
+    plt.plot(val_losses, label='Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()

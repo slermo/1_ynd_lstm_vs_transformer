@@ -1,9 +1,7 @@
-
 from src.utils import my_device
 import torch
 
 def lstm_train(model, vocab_size, loader, optimizer,criterion):
-
         model.train()
         total_loss = 0
 
