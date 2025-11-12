@@ -49,8 +49,6 @@ def eval_transformer_pipeline(model, val_loader, tokenizer):
     rouge_scores = rouge.compute()
 
     print_metrics(avg_loss, accuracy, rouge_scores)
-
-    return avg_loss, accuracy, rouge_scores
     
 def print_metrics(avg_loss, accuracy, rouge_scores):
     print('distilgpt2 Metrics on val dataset')
