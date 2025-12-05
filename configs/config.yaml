@@ -6,6 +6,6 @@ dataset:
     test: 0.1
 
 train:
-  epoches: 5
+  epoches: 10
   learning_rate: 1e-3
   weight_decay: 1e-5

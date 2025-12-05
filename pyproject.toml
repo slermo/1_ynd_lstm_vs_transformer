@@ -90,6 +90,7 @@ yarl = "1.20.0"
 evaluate = "0.4.4"
 absl-py = "2.3.0"
 rouge_score = "0.1.2"
+prettytable = "3.16.0"
 
 [build-system]
 requires = ["poetry-core"]

@@ -23,18 +23,39 @@ class LstmModel(nn.Module):
         logits = self.fc(out)
         return logits
     
-    # Генерация последовательности токенов
-    @torch.no_grad()
-    def generate(self, x, max_new_tokens=20):
-        self.eval()
-        x = x.to(my_device())
-        hidden = None
 
-        for _ in range(max_new_tokens):
+    def generate(self, x, max_new_tokens=20, top_k=50):
+        "Стратегия выбора некс токена top-k"
+        with torch.no_grad():
+            self.eval()
+            x = x.to(my_device())
+            
             emb = self.embedding(x)
-            out, hidden = self.rnn(emb, hidden)
-            logits = self.fc(out[:, -1, :]) # берём последний токен
-            probs = torch.nn.functional.softmax(logits, dim=-1)
-            next_token = torch.argmax(probs, dim=-1).unsqueeze(1)
-            x = torch.cat([x, next_token], dim=1)
-        return x
+            out, hidden = self.rnn(emb)
+            
+            for i in range(max_new_tokens):
+                logits = self.fc(out[:, -1, :])
+
+                if top_k > 0:
+                    indices_to_remove = logits < torch.topk(logits, top_k)[0][..., -1, None]
+                    logits[indices_to_remove] = float('-inf')
+
+                probs = torch.nn.functional.softmax(logits, dim=-1)
+                next_token = torch.multinomial(probs, num_samples=1)
+                
+                # # Принты для дебага
+                # top_probs, top_indices = torch.topk(probs[0], k=3)
+                # if tokenizer:
+                #     print(f"\nШаг {i+1}:")
+                #     for rank, (prob, idx) in enumerate(zip(top_probs, top_indices), 1):
+                #         token_id = idx.item()
+                #         token_text = tokenizer.decode([token_id])
+                #         print(f"  {rank}. ID:{token_id:5d} prob:{prob.item():.4f} -> '{token_text}'")
+                
+                
+                x = torch.cat([x, next_token], dim=1)
+                emb = self.embedding(next_token)
+                out, hidden = self.rnn(emb, hidden)
+            
+            return x
+        
